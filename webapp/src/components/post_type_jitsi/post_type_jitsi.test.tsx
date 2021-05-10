@@ -62,35 +62,6 @@ describe('PostTypeJitsi', () => {
         expect(defaultProps.actions.enrichMeetingJwt).not.toBeCalled();
     });
 
-    it('should render a post if the post type is not null, and should try to enrich the token', () => {
-        defaultProps.actions.enrichMeetingJwt.mockClear();
-        const wrapper = shallow(
-            <PostTypeJitsi {...defaultProps}/>
-        );
-        expect(defaultProps.actions.enrichMeetingJwt).toBeCalled();
-        expect(wrapper).toMatchSnapshot();
-    });
-
-    it('should render a post without token if there is no jwt token, and shouldn\'t try to enrich the token', () => {
-        defaultProps.actions.enrichMeetingJwt.mockClear();
-        const props = {
-            ...defaultProps,
-            post: {
-                ...defaultProps.post,
-                props: {
-                    ...defaultProps.post.props,
-                    jwt_meeting: false
-                }
-            }
-        };
-
-        const wrapper = shallow(
-            <PostTypeJitsi {...props}/>
-        );
-        expect(wrapper).toMatchSnapshot();
-        expect(defaultProps.actions.enrichMeetingJwt).not.toBeCalled();
-    });
-
     it('should render the default topic if the topic is empty', () => {
         const props = {
             ...defaultProps,
@@ -107,24 +78,6 @@ describe('PostTypeJitsi', () => {
             <PostTypeJitsi {...props}/>
         );
         expect(wrapper.find('h1')).toMatchSnapshot();
-    });
-
-    it('should render the a different subtitle if the meeting is personal', () => {
-        const props = {
-            ...defaultProps,
-            post: {
-                ...defaultProps.post,
-                props: {
-                    ...defaultProps.post.props,
-                    meeting_personal: true
-                }
-            }
-        };
-
-        const wrapper = shallow(
-            <PostTypeJitsi {...props}/>
-        );
-        expect(wrapper).toMatchSnapshot();
     });
 
     it('should prevent the default link behavior and call the action to open jitsi if embedded is true', () => {

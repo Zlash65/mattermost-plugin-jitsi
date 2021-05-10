@@ -5,9 +5,22 @@ import (
 	"math/big"
 	"strings"
 
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"log"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/mattermost/mattermost-server/v5/mlog"
 )
+
+type Meeting struct {
+	Status     string `json:"status"`
+	Message    string `json:"message"`
+	MeetingID  string `json:"meeting_id"`
+	MeetingPin string `json:"meeting_pin"`
+}
 
 var PLURALNOUN = []string{"Aliens", "Animals", "Antelopes", "Ants", "Apes", "Apples", "Baboons",
 	"Bacteria", "Badgers", "Bananas", "Bats", "Bears", "Birds", "Bonobos",
@@ -160,4 +173,51 @@ func generateTeamChannelName(teamName string, channelName string) string {
 
 func generatePersonalMeetingName(username string) string {
 	return username + "-" + randomString(LETTERS, 20)
+}
+
+// Kredily API integration
+
+func generateRoomForKredily(mmID string, channelID string) (string, string) {
+	requestBody, err := json.Marshal(map[string]string{
+		"mm_id":      mmID,
+		"channel_id": channelID,
+	})
+
+	// return empty if error
+	if err != nil {
+		log.Fatalln(err)
+		return "", ""
+	}
+
+	request, err := http.NewRequest("POST", "https://app.kredily.com/videochat/get-reach-meeting-info/", bytes.NewBuffer(requestBody))
+	if err != nil {
+		log.Fatalln(err)
+		return "", ""
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(request)
+
+	// return empty if api call fails
+	if err != nil {
+		log.Fatalln(err)
+		return "", ""
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var meeting = new(Meeting)
+	err1 := json.Unmarshal(body, &meeting)
+	if err1 != nil {
+		log.Fatalln(err)
+		return "", ""
+	}
+
+	return meeting.MeetingID, meeting.MeetingPin
 }

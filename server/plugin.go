@@ -22,6 +22,7 @@ const jitsiNameSchemeAsk = "ask"
 const jitsiNameSchemeWords = "words"
 const jitsiNameSchemeUUID = "uuid"
 const jitsiNameSchemeMattermost = "mattermost"
+const jitsiNameSchemeKredily = "kredily"
 const configChangeEvent = "config_update"
 
 type UserConfig struct {
@@ -50,9 +51,9 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
-	if err := p.API.RegisterCommand(createJitsiCommand()); err != nil {
-		return err
-	}
+	// if err := p.API.RegisterCommand(createJitsiCommand()); err != nil {
+	// 	return err
+	// }
 
 	i18nBundle, err := i18n.InitBundle(p.API, filepath.Join("assets", "i18n"))
 	if err != nil {
@@ -174,6 +175,7 @@ func (p *Plugin) updateJwtUserInfo(jwtToken string, user *model.User) (string, e
 }
 
 func (p *Plugin) startMeeting(user *model.User, channel *model.Channel, meetingID string, meetingTopic string, personal bool) (string, error) {
+	var meetingPin = ""
 	l := p.b.GetServerLocalizer()
 	if meetingID == "" {
 		meetingID = encodeJitsiMeetingID(meetingTopic)
@@ -185,7 +187,7 @@ func (p *Plugin) startMeeting(user *model.User, channel *model.Channel, meetingI
 	meetingPersonal := false
 	defaultMeetingTopic := p.b.LocalizeDefaultMessage(l, &i18n.Message{
 		ID:    "jitsi.start_meeting.default_meeting_topic",
-		Other: "Jitsi Meeting",
+		Other: "Greet Meeting",
 	})
 
 	if len(meetingTopic) < 1 {
@@ -224,6 +226,8 @@ func (p *Plugin) startMeeting(user *model.User, channel *model.Channel, meetingI
 				})
 				meetingID = generateTeamChannelName(team.Name, channel.Name)
 			}
+		case jitsiNameSchemeKredily:
+			meetingID, meetingPin = generateRoomForKredily(user.Id, channel.Id)
 		default:
 			meetingID = generateEnglishTitleName()
 		}
@@ -299,12 +303,14 @@ func (p *Plugin) startMeeting(user *model.User, channel *model.Channel, meetingI
 		Fallback: p.b.LocalizeWithConfig(l, &i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
 				ID: "jitsi.start_meeting.fallback_text",
-				Other: `Video Meeting started at [{{.MeetingID}}]({{.MeetingURL}}).
+				Other: `Video Meeting started at [{{.MeetingID}}]({{.MeetingURL}})
+Meeting Pin : {{.MeetingPIN}}
 
 [Join Meeting]({{.MeetingURL}})`,
 			},
 			TemplateData: map[string]string{
 				"MeetingID":  meetingID,
+				"MeetingPIN": meetingPin,
 				"MeetingURL": meetingURL,
 			},
 		}) + "\n\n" + meetingUntil,
@@ -312,16 +318,18 @@ func (p *Plugin) startMeeting(user *model.User, channel *model.Channel, meetingI
 		Text: p.b.LocalizeWithConfig(l, &i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
 				ID: "jitsi.start_meeting.slack_attachment_text",
-				Other: `{{.MeetingType}}: [{{.MeetingID}}]({{.MeetingURL}})
+				Other: `{{.MeetingType}} : [{{.MeetingID}}]({{.MeetingURL}})
+Meeting Pin : {{.MeetingPIN}}
 
 [Join Meeting]({{.MeetingURL}})`,
 			},
 			TemplateData: map[string]string{
 				"MeetingType": meetingTypeString,
 				"MeetingID":   meetingID,
+				"MeetingPIN":  meetingPin,
 				"MeetingURL":  meetingURL,
 			},
-		}) + "\n\n" + meetingUntil,
+		}),
 	}
 
 	post := &model.Post{
@@ -331,6 +339,7 @@ func (p *Plugin) startMeeting(user *model.User, channel *model.Channel, meetingI
 		Props: map[string]interface{}{
 			"attachments":             []*model.SlackAttachment{&slackAttachment},
 			"meeting_id":              meetingID,
+			"meeting_pin":             meetingPin,
 			"meeting_link":            meetingLink,
 			"jwt_meeting":             JWTMeeting,
 			"meeting_jwt":             jwtToken,
@@ -381,7 +390,7 @@ func (p *Plugin) askMeetingType(user *model.User, channel *model.Channel) error 
 			URL: apiURL,
 			Context: map[string]interface{}{
 				"meeting_id":    generateEnglishTitleName(),
-				"meeting_topic": "Jitsi Meeting",
+				"meeting_topic": "Greet Meeting",
 				"personal":      true,
 			},
 		},
@@ -434,7 +443,7 @@ func (p *Plugin) askMeetingType(user *model.User, channel *model.Channel) error 
 			URL: apiURL,
 			Context: map[string]interface{}{
 				"meeting_id":    generateUUIDName(),
-				"meeting_topic": "Jitsi Meeting",
+				"meeting_topic": "Greet Meeting",
 				"personal":      false,
 			},
 		},
@@ -444,7 +453,7 @@ func (p *Plugin) askMeetingType(user *model.User, channel *model.Channel) error 
 		Title: p.b.LocalizeWithConfig(l, &i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
 				ID:    "jitsi.ask.title",
-				Other: "Jitsi Meeting Start",
+				Other: "Greet Meeting Start",
 			},
 		}),
 		Text: p.b.LocalizeWithConfig(l, &i18n.LocalizeConfig{

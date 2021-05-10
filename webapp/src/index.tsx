@@ -41,7 +41,7 @@ class PluginClass {
             (channel: Channel) => {
                 store.dispatch(startMeeting(channel.id));
             },
-            'Start Jitsi Meeting'
+            'Start Greet Meeting'
         );
         registry.registerPostTypeComponent('custom_jitsi', (props: {post: Post}) => (<I18nProvider><PostTypeJitsi post={props.post}/></I18nProvider>));
         registry.registerWebSocketEventHandler('custom_jitsi_config_update', () => store.dispatch(loadConfig()));

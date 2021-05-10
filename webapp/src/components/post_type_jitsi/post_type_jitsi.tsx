@@ -108,7 +108,7 @@ export class PostTypeJitsi extends React.PureComponent<Props, State> {
         let subtitle = (
             <FormattedMessage
                 id='jitsi.meeting-id'
-                defaultMessage='Meeting ID: '
+                defaultMessage='Meeting ID : '
             />
         );
         if (props.meeting_personal) {
@@ -120,10 +120,17 @@ export class PostTypeJitsi extends React.PureComponent<Props, State> {
             );
         }
 
+        const subtitlePin = (
+            <FormattedMessage
+                id='jitsi.meeting-pin'
+                defaultMessage='Meeting Pin : '
+            />
+        );
+
         let title = (
             <FormattedMessage
                 id='jitsi.default-title'
-                defaultMessage='Jitsi Meeting'
+                defaultMessage='Greet Meeting'
             />
         );
         if (props.meeting_topic) {
@@ -151,6 +158,12 @@ export class PostTypeJitsi extends React.PureComponent<Props, State> {
                                 </a>
                             </span>
                             <div>
+                                <span>
+                                    {subtitlePin}
+                                    {props.meeting_pin}
+                                </span>
+                            </div>
+                            <div>
                                 <div style={style.body}>
                                     <div>
                                         <a
@@ -171,7 +184,7 @@ export class PostTypeJitsi extends React.PureComponent<Props, State> {
                                             />
                                         </a>
                                     </div>
-                                    {this.renderUntilDate(post, style)}
+                                    {/* {this.renderUntilDate(post, style)} */}
                                 </div>
                             </div>
                         </div>

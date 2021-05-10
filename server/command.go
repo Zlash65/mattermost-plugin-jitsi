@@ -23,14 +23,14 @@ func startMeetingError(channelID string, detailedError string) (*model.CommandRe
 		}
 }
 
-func createJitsiCommand() *model.Command {
-	return &model.Command{
-		Trigger:          jitsiCommand,
-		AutoComplete:     true,
-		AutoCompleteDesc: "Start a Jitsi meeting in current channel. Other available commands: help, settings",
-		AutoCompleteHint: "[command]",
-	}
-}
+// func createJitsiCommand() *model.Command {
+// 	return &model.Command{
+// 		Trigger:          jitsiCommand,
+// 		AutoComplete:     true,
+// 		AutoCompleteDesc: "Start a Jitsi meeting in current channel. Other available commands: help, settings",
+// 		AutoCompleteHint: "[command]",
+// 	}
+// }
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	split := strings.Fields(args.Command)
